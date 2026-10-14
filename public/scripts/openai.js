@@ -60,6 +60,8 @@ import {
     getStringHash,
     getVideoDurationFromDataURL,
     isDataURL,
+    isFalseBoolean,
+    isTrueBoolean,
     isUuid,
     isValidUrl,
     parseJsonFile,
@@ -6609,6 +6611,50 @@ function runProxyCallback(_, value) {
 }
 
 /**
+ * Gets or sets an OpenRouter list setting (providers, quantizations) as a JSON-serialized array.
+ * Writes the setting directly instead of reading it back from the select, so that values
+ * for options disabled by the current model's provider sync are not dropped.
+ * @param {'openrouter_providers'|'openrouter_quantizations'} key Settings key
+ * @param {string} selector Select element selector
+ * @param {string} value JSON-serialized array of strings, or empty to get the current value
+ * @returns {string} Current value as a JSON-serialized array
+ */
+function runOpenRouterListCallback(key, selector, value) {
+    value = String(value ?? '').trim();
+
+    if (value) {
+        const parsedValue = ((x) => { try { return JSON.parse(x); } catch { return null; } })(value);
+        if (!Array.isArray(parsedValue)) {
+            throw new Error('Invalid list format. The value must be a JSON-serialized array of strings.');
+        }
+        oai_settings[key] = parsedValue.map(String);
+        $(selector).val(oai_settings[key]).trigger('change.select2');
+        updateOpenRouterProvidersWarning('#openrouter_providers_chat');
+        saveSettingsDebounced();
+    }
+
+    return JSON.stringify(oai_settings[key] ?? []);
+}
+
+/**
+ * Gets or sets the OpenRouter "allow fallback providers" setting.
+ * @param {string} value 'true'/'false', or empty to get the current value
+ * @returns {string} Current value as 'true' or 'false'
+ */
+function runOpenRouterAllowFallbacksCallback(value) {
+    value = String(value ?? '').trim();
+
+    if (value) {
+        if (!isTrueBoolean(value) && !isFalseBoolean(value)) {
+            throw new Error('Invalid value. Expected true or false.');
+        }
+        $('#openrouter_allow_fallbacks').prop('checked', isTrueBoolean(value)).trigger('input');
+    }
+
+    return String(!!oai_settings.openrouter_allow_fallbacks);
+}
+
+/**
  * Handle Vertex AI authentication mode change
  */
 function onVertexAIAuthModeChange() {
@@ -6773,6 +6819,62 @@ export function initOpenAI() {
             }),
         ],
         helpString: 'Sets a proxy preset by name.',
+    }));
+    SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+        name: 'openrouter-providers',
+        callback: (_, value) => runOpenRouterListCallback('openrouter_providers', '#openrouter_providers_chat', String(value ?? '')),
+        returns: ARGUMENT_TYPE.LIST,
+        unnamedArgumentList: [
+            SlashCommandArgument.fromProps({
+                description: 'list of provider names',
+                typeList: [ARGUMENT_TYPE.LIST],
+                isRequired: false,
+            }),
+        ],
+        helpString: `
+            <div>
+                Sets the OpenRouter model providers for Chat Completion. Gets the list if no value is provided.
+            </div>
+            <div>
+                <strong>Example:</strong>
+                <pre><code class="language-stscript">/openrouter-providers ["Anthropic", "Google"]</code></pre>
+                <pre><code class="language-stscript">/openrouter-providers []</code></pre>
+            </div>
+        `,
+    }));
+    SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+        name: 'openrouter-quantizations',
+        callback: (_, value) => runOpenRouterListCallback('openrouter_quantizations', '#openrouter_quantizations_chat', String(value ?? '')),
+        returns: ARGUMENT_TYPE.LIST,
+        unnamedArgumentList: [
+            SlashCommandArgument.fromProps({
+                description: 'list of quantization levels',
+                typeList: [ARGUMENT_TYPE.LIST],
+                isRequired: false,
+            }),
+        ],
+        helpString: `
+            <div>
+                Sets the OpenRouter model quantizations for Chat Completion. Gets the list if no value is provided.
+            </div>
+            <div>
+                <strong>Example:</strong>
+                <pre><code class="language-stscript">/openrouter-quantizations ["fp8", "bf16"]</code></pre>
+            </div>
+        `,
+    }));
+    SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+        name: 'openrouter-allow-fallbacks',
+        callback: (_, value) => runOpenRouterAllowFallbacksCallback(String(value ?? '')),
+        returns: ARGUMENT_TYPE.BOOLEAN,
+        unnamedArgumentList: [
+            SlashCommandArgument.fromProps({
+                description: 'allow fallback providers',
+                typeList: [ARGUMENT_TYPE.BOOLEAN],
+                isRequired: false,
+            }),
+        ],
+        helpString: 'Sets whether OpenRouter may fall back to other providers for Chat Completion. Gets the value if no argument is provided.',
     }));
 
     $('#test_api_button').on('click', testApiConnection);

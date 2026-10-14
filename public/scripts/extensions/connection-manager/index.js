@@ -42,6 +42,9 @@ const CC_COMMANDS = [
     'api',
     'api-url',
     'model',
+    'openrouter-providers',
+    'openrouter-quantizations',
+    'openrouter-allow-fallbacks',
     'proxy',
     'stop-strings',
     'start-reply-with',
@@ -74,6 +77,9 @@ const FANCY_NAMES = {
     'api-url': 'Server URL',
     'preset': 'Settings Preset',
     'model': 'Model',
+    'openrouter-providers': 'OpenRouter Providers',
+    'openrouter-quantizations': 'OpenRouter Quantizations',
+    'openrouter-allow-fallbacks': 'OpenRouter Allow Fallbacks',
     'proxy': 'Proxy Preset',
     'sysprompt-state': 'Use System Prompt',
     'sysprompt': 'System Prompt Name',
@@ -164,6 +170,9 @@ const profilesProvider = () => [
  * @property {string} [api] API
  * @property {string} [preset] Settings Preset
  * @property {string} [model] Model
+ * @property {string} [openrouter-providers] OpenRouter Providers (JSON-serialized array)
+ * @property {string} [openrouter-quantizations] OpenRouter Quantizations (JSON-serialized array)
+ * @property {string} [openrouter-allow-fallbacks] OpenRouter Allow Fallbacks
  * @property {string} [proxy] Proxy Preset
  * @property {string} [instruct] Instruct Template
  * @property {string} [context] Context Template
