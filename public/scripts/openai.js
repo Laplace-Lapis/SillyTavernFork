@@ -81,7 +81,7 @@ import { t } from './i18n.js';
 import { ToolManager } from './tool-calling.js';
 import { accountStorage } from './util/AccountStorage.js';
 import { COMETAPI_IGNORE_PATTERNS, IGNORE_SYMBOL, MEDIA_DISPLAY, MEDIA_TYPE } from './constants.js';
-import { syncNanoGptProvidersForModel, syncOpenRouterProvidersForModel, updateNanoGptProvidersWarning, updateOpenRouterProvidersWarning } from './textgen-models.js';
+import { getSelectedOpenRouterProviders, syncNanoGptProvidersForModel, syncOpenRouterProvidersForModel, updateNanoGptProvidersWarning, updateOpenRouterProvidersWarning } from './textgen-models.js';
 
 export {
     openai_messages_count,
@@ -7265,14 +7265,7 @@ export function initOpenAI() {
     }
 
     $('#openrouter_providers_chat').on('change', function () {
-        const selectedProviders = $(this).val();
-
-        // Not a multiple select?
-        if (!Array.isArray(selectedProviders)) {
-            return;
-        }
-
-        oai_settings.openrouter_providers = selectedProviders;
+        oai_settings.openrouter_providers = getSelectedOpenRouterProviders('#openrouter_providers_chat');
 
         updateOpenRouterProvidersWarning('#openrouter_providers_chat');
         saveSettingsDebounced();
