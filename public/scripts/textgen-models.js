@@ -347,6 +347,17 @@ const OPENROUTER_PROVIDER_WARNING_SELECTORS = {
     },
 };
 
+/**
+ * Gets the selected OpenRouter providers, including options disabled for the current model.
+ * jQuery's .val() skips disabled options, which would silently drop providers that the
+ * current model doesn't offer but that are still part of the user's preference.
+ * @param {string} providersSelector Providers select element selector
+ * @returns {string[]} Selected provider names
+ */
+export function getSelectedOpenRouterProviders(providersSelector) {
+    return $(providersSelector).find('option:selected').toArray().map(option => String($(option).val()));
+}
+
 export function updateOpenRouterProvidersWarning(providersSelector) {
     const $providers = $(providersSelector);
 
